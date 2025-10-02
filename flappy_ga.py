@@ -270,12 +270,21 @@ class GA:
         # clip nhẹ để tránh bùng nổ
         np.clip(g, -5, 5, out=g)
         return g
+    
+def run(self, n_gen=50, eval_episodes=1, seed=None, log_path="ga_log.json", model_path="best_genome.npz", resume=False):
+    temp = TinyNN(rng=self.rng)
 
-    def run(self, n_gen=50, eval_episodes=1, seed=None, log_path="ga_log.json", model_path="best_genome.npz"):
-        # init pop
-        temp = TinyNN(rng=self.rng)
+    if resume and os.path.exists(model_path):
+        data = np.load(model_path)
+        best = data["genome"]
+        # tạo quần thể mới quanh best genome
+        pop = [best.copy()]
+        for _ in range(self.pop_size-1):
+            g = self.mutate(best)   # clone + đột biến
+            pop.append(g)
+        print("Resumed training from saved best genome.")
+    else:
         pop = [TinyNN(rng=self.rng).genome for _ in range(self.pop_size)]
-
         logs = {"gen": [], "fitness_mean": [], "fitness_best": [], "fitness_std": []}
         best_overall = None
         best_fit_overall = -1e9
